@@ -23,9 +23,9 @@ You can install them via `apt`, `brew`, `pkg`, etc., depending on your system.
 1. Clone this repository:
 
    ```bash
-   git clone https://github.com/yourusername/world-radio
-   cd world-radio
-   chmod +x world_radio.txt
+   git clone https://gitlab.com/_f_umi/world_radio.git
+   cd world_radio
+   chmod +x world_radio.sh
    ```
 
 2. (Optional) Create a `.countries` file manually if you want to override or cache the country list.
@@ -48,13 +48,13 @@ You can install them via `apt`, `brew`, `pkg`, etc., depending on your system.
 ### Show All Available Countries
 
 ```bash
-./world_radio.txt -l
+./world_radio.sh -l
 ```
 
 ### Start with Preselected Country
 
 ```bash
-./world_radio.txt -c "Japan"
+./world_radio.sh -c "Japan"
 ```
 
 ---

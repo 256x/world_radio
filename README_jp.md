@@ -23,9 +23,9 @@
 1. リポジトリをクローンします：
 
    ```bash
-   git clone https://github.com/yourusername/world-radio
-   cd world-radio
-   chmod +x world_radio.txt
+   git clone https://gitlab.com/_f_umi/world_radio.git
+   cd world_radio
+   chmod +x world_radio.sh
    ```
 
 2. （任意）`.countries` ファイルを手動で作成すれば、国リストをキャッシュまたはカスタマイズできます。
@@ -48,13 +48,13 @@
 ### 国リストの表示
 
 ```bash
-./world_radio.txt -l
+./world_radio.sh -l
 ```
 
 ### 国を指定して起動
 
 ```bash
-./world_radio.txt -c "Japan"
+./world_radio.sh -c "Japan"
 ```
 
 ---
