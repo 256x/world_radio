@@ -51,12 +51,6 @@ You can install them via `apt`, `brew`, `pkg`, etc., depending on your system.
 ./world_radio.sh -l
 ```
 
-### Start with Preselected Country
-
-```bash
-./world_radio.sh -c "Japan"
-```
-
 ---
 
 ## 🩼 Notes
