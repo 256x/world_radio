@@ -4,5 +4,3 @@ A terminal-based script to browse and play live radio stations by country using 
 
 [English README](README_en.md) | [日本語README](README_jp.md)
 
-
-
