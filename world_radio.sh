@@ -52,6 +52,13 @@ log() {
   echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"
 }
 
+# URLエンコード関数
+url_encode() {
+  local string="$1"
+  local encoded=$(echo "$string" | sed -e 's/ /%20/g' -e 's/&/%26/g' -e 's/,/%2C/g' -e 's/(/%28/g' -e 's/)/%29/g')
+  echo "$encoded"
+}
+
 # mplayerプロセスを終了する関数
 stop_mplayer() {
   if [ -n "$mplayer_pid" ] && kill -0 "$mplayer_pid" 2>/dev/null; then
@@ -120,7 +127,7 @@ update_display() {
   echo "--------------------------------------------------"
 
   echo ""
-  echo "Updated: $(date '+%H:%M:%S') | Press ESC to return to station list | Press 'q' to exit"
+  echo "Updated: $(date '+%H:%M:%S')" #| Press ESC to return to station list | Press 'q' to exit"
   log "Updated display: station information displayed"
 }
 
@@ -165,7 +172,7 @@ select_country() {
 # 選局処理
 select_station() {
   local stations
-  CACHE_FILE="$CACHE_DIR/stations_${country}.json"
+  CACHE_FILE="$CACHE_DIR/stations_${country// /_}.json"  # スペースをアンダースコアに置換
 
   clear  # 画面をクリア
 
@@ -173,20 +180,36 @@ select_station() {
   echo "--- Loading [ $country ] Radio Stations ---"
   echo ""
 
+  # 国名をURLエンコード
+  local encoded_country=$(url_encode "$country")
+  log "Country: $country, Encoded: $encoded_country"
+
   # ラジオ局データの取得（キャッシュ利用）
-  log "Using option: country=$country"
+  log "Using option: country=$encoded_country"
   if [ -f "$CACHE_FILE" ] && [ $(( $(date +%s) - $(stat -c %Y "$CACHE_FILE") )) -lt "$CACHE_TTL" ]; then
     stations=$(cat "$CACHE_FILE")
     log "Loaded cached data for $country"
   else
-    stations=$(curl -s -f --max-time 10 "https://de1.api.radio-browser.info/json/stations/bycountry/$country" 2>/dev/null)
-    if [ $? -eq 0 ] && [ -n "$stations" ]; then
+    # デバッグ用に完全なURLを表示
+    local api_url="https://de1.api.radio-browser.info/json/stations/bycountry/$encoded_country"
+    log "API URL: $api_url"
+    
+    # curlコマンドを実行し、結果をログに記録
+    stations=$(curl -s -f --max-time 10 "$api_url" 2>/dev/null)
+    curl_status=$?
+    
+    # APIレスポンスのデバッグ
+    log "API response status: $curl_status"
+    log "API response size: $(echo "$stations" | wc -c) bytes"
+    
+    if [ $curl_status -eq 0 ] && [ -n "$stations" ] && echo "$stations" | grep -q "url_resolved"; then
       mkdir -p "$CACHE_DIR" 2>/dev/null
       echo "$stations" > "$CACHE_FILE"
       log "Fetched and cached station data for $country"
     else
-      echo "Error: Failed to fetch station data. Invalid country or network issue." >&2
-      log "Failed to fetch station data for $country"
+      echo "Error: Failed to fetch station data for '$country'. Invalid country or network issue." >&2
+      log "Failed to fetch station data for $country. Raw response:"
+      log "$(echo "$stations" | head -n 30)"  # 最初の30行だけログに出力
       return 1
     fi
   fi
@@ -199,6 +222,10 @@ select_station() {
     log "No stations found for $country"
     return 1
   fi
+
+  # 局の数をログに記録
+  local station_count=$(echo "$stations" | wc -l)
+  log "Found $station_count stations for $country"
 
   selection=$(echo "$stations" | fzf --reverse --prompt="  Popular $country Radio > " --border --height=20 --bind "ctrl-b:execute(print $BACK_TO_COUNTRY)+abort" --bind "q:execute(print $QUIT_MPLAYER)+abort")
 
@@ -242,7 +269,7 @@ play_station() {
 
     # 接続試行中のメッセージを表示
     echo ""
-    echo "Connecting to stream... (Press ESC to cancel, q to quit) (Attempt $((retries + 1))/$STREAM_RETRIES)"
+    echo "Connecting to stream..." #(Press ESC to cancel, q to quit) (Attempt $((retries + 1))/$STREAM_RETRIES)"
     log "Attempting to connect to stream: $url (Attempt $((retries + 1))/$STREAM_RETRIES)"
 
     # MPlayerの実行（バックグラウンド）- 曲情報取得オプション追加
@@ -470,7 +497,7 @@ while true; do
         break  # 局選択ループから抜ける
       fi
     else
-      # 曲選択がキャンセルされた場合、国選択からやり直す
+      # 局選択がキャンセルされた場合、国選択からやり直す
       break  # 局選択ループから抜ける
     fi
   done
