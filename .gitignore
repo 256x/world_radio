@@ -1,11 +1,3 @@
-# Logs and temp files
-/tmp/mplayer_radio_fifo
-/tmp/mplayer_radio_info
-/tmp/radio_script.log
-
-# Cache directory
-~/.cache/radio_script/
-
 # Country list (optional, generated)
 .countries
 
